@@ -2,18 +2,30 @@ import speech_recognition as sr
 import whisper
 import numpy as np
 import sys
+from scipy.signal import resample
+
+
+
 
 class WhisperRecognizer:
     def __init__(self, model_size="base"):
         self.model = whisper.load_model(model_size)
     
     def recognize(self, audio_data):
-        # Convert the audio data to a NumPy array
         audio = np.frombuffer(audio_data.get_raw_data(), np.int16).astype(np.float32) / 32768.0
-
-        # Use Whisper to transcribe the audio
+        original_rate = audio_data.sample_rate
+        target_rate = 16000
+        new_length = int(len(audio) * target_rate / original_rate)
+        audio = resample(audio, new_length)
         result = self.model.transcribe(audio, fp16=False)
         return result["text"]
+    # def recognize(self, audio_data):
+    #     # Convert the audio data to a NumPy array
+    #     audio = np.frombuffer(audio_data.get_raw_data(), np.int16).astype(np.float32) / 32768.0
+
+    #     # Use Whisper to transcribe the audio
+    #     result = self.model.transcribe(audio, fp16=False)
+    #     return result["text"]
 
 def find_microphone(mic_name):
     """Find a microphone by name."""
